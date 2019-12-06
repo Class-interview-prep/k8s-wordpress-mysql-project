@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-wp
+spec:
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None
+  selector:
+    app: wp
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: wp
+  serviceName: wp-cip-headless
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: wp
+    spec:
+      containers:
+      - name: wp-con
+        image: wordpress:4
+        #    env:
+                #  - name: WORDPRESS_DB_NAME
+          #  value: wordpress
+          #      - name: WORDPRESS_DB_USER
+          # value: root
+          # - name: WORDPRESS_DB_PASSWORD
+          # value: rootpasswd
+          # - name: WORDPRESS_DB_HOST
+          #    value: mysql-cip-headless.default.svc.cluster.local
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+        - name: html
+          mountPath: /var/www/html
+  volumeClaimTemplates:
+  - metadata:
+      name: html
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-nodeport-wp
+spec:
+  selector:
+    app: wp
+  ports:
+  - port: 80
+  type: NodePort
