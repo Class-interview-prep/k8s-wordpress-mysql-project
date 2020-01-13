@@ -67,3 +67,4 @@ spec:
   ports:
   - port: 80
   type: NodePort
+  
